@@ -45,6 +45,7 @@ MACRO_CONFIG_INT(TcUnfreezeLagDelayTicks, tc_remove_anti_delay_ticks, 25, 5, 150
 // FORSTClient
 MACRO_CONFIG_INT(ClForstAutoUnfreeze, cl_forst_auto_unfreeze, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically aim the laser at visible frozen teammates")
 MACRO_CONFIG_INT(ClForstAutoUnfreezeRange, cl_forst_auto_unfreeze_range, 800, 100, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Maximum distance for Auto Unfreeze target selection")
+MACRO_CONFIG_INT(ClForstHammerAutoFire, cl_forst_hammer_auto_fire, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically hold fire while the hammer is equipped")
 
 MACRO_CONFIG_INT(TcUnpredOthersInFreeze, tc_unpred_others_in_freeze, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Dont predict other players if you are frozen")
 MACRO_CONFIG_INT(TcPredMarginInFreeze, tc_pred_margin_in_freeze, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable changing prediction margin while frozen")
