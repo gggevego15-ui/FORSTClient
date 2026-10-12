@@ -81,6 +81,35 @@ CUi::EPopupMenuFunctionResult CMenus::PopupSettingsCountrySelection(void *pConte
 	return CUi::POPUP_KEEP_OPEN;
 } // bestclient
 
+void CMenus::RenderSettingsForst(CUIRect MainView)
+{
+	static bool s_ButtonAnimations = true;
+	static bool s_CompactButtons = true;
+	static CButtonContainer s_AnimationsButton;
+	static CButtonContainer s_CompactButton;
+	CUIRect Title, Description, Row, Button, Label;
+
+	MainView.HSplitTop(28.0f, &Title, &MainView);
+	Ui()->DoLabel(&Title, "FORST Client", 20.0f, TEXTALIGN_ML);
+	MainView.HSplitTop(4.0f, nullptr, &MainView);
+	MainView.HSplitTop(24.0f, &Description, &MainView);
+	Ui()->DoLabel(&Description, "Настройки интерфейса FORST.", 13.0f, TEXTALIGN_ML);
+	MainView.HSplitTop(12.0f, nullptr, &MainView);
+
+	MainView.HSplitTop(22.0f, &Row, &MainView);
+	Row.VSplitRight(112.0f, &Label, &Button);
+	Ui()->DoLabel(&Label, "Анимации кнопок", 13.0f, TEXTALIGN_ML);
+	if(DoButton_Menu(&s_AnimationsButton, s_ButtonAnimations ? "Включены" : "Выключены", s_ButtonAnimations, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 2.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f)))
+		s_ButtonAnimations = !s_ButtonAnimations;
+
+	MainView.HSplitTop(6.0f, nullptr, &MainView);
+	MainView.HSplitTop(22.0f, &Row, &MainView);
+	Row.VSplitRight(112.0f, &Label, &Button);
+	Ui()->DoLabel(&Label, "Компактные кнопки", 13.0f, TEXTALIGN_ML);
+	if(DoButton_Menu(&s_CompactButton, s_CompactButtons ? "Включены" : "Выключены", s_CompactButtons, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 2.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f)))
+		s_CompactButtons = !s_CompactButtons;
+}
+
 void CMenus::RenderSettings(CUIRect MainView)
 {
 	// bestclient
@@ -152,7 +181,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 			Localize("BestClient"), // bestclient
 			Localize("Profiles"), // TClient
 			Localize("Configs"), // TClient
-			Localize("Credits")};
+			Localize("Credits"),
+			"FORST"};
 		static CButtonContainer s_aTabButtons[SETTINGS_LENGTH];
 		const int TabCorners = NavOnLeft ? IGraphics::CORNER_L : IGraphics::CORNER_R;
 
@@ -160,8 +190,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		{
 			if(i == SETTINGS_LANGUAGE || i == SETTINGS_PLAYER) // bestclient
 				continue; // bestclient
-			TabBar.HSplitTop(10.0f, nullptr, &TabBar);
-			TabBar.HSplitTop(26.0f, &Button, &TabBar);
+			TabBar.HSplitTop(6.0f, nullptr, &TabBar);
+			TabBar.HSplitTop(22.0f, &Button, &TabBar);
 			// bestclient
 			const bool ExploreLock = m_AssetsEditorState.m_Open && m_AssetsEditorState.m_ExploreSide >= 0;
 			const bool AssetsTab = i == SETTINGS_ASSETS;
