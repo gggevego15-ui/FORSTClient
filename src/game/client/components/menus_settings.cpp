@@ -90,6 +90,8 @@ void CMenus::RenderSettingsForst(CUIRect MainView)
 	static CButtonContainer s_AutoUnfreezeButton;
 	static CButtonContainer s_RangeDownButton;
 	static CButtonContainer s_RangeUpButton;
+	static CButtonContainer s_HammerRangeDownButton;
+	static CButtonContainer s_HammerRangeUpButton;
 	CUIRect Title, Description, Row, Button, Label;
 
 	MainView.HSplitTop(28.0f, &Title, &MainView);
@@ -112,6 +114,20 @@ void CMenus::RenderSettingsForst(CUIRect MainView)
 	Ui()->DoLabel(&Label, "Автоогонь молота", 13.0f, TEXTALIGN_ML);
 	if(DoButton_Menu(&s_HammerAutoFireButton, g_Config.m_ClForstHammerAutoFire ? "Включён" : "Выключен", g_Config.m_ClForstHammerAutoFire, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 2.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f)))
 		g_Config.m_ClForstHammerAutoFire = !g_Config.m_ClForstHammerAutoFire;
+
+	MainView.HSplitTop(4.0f, nullptr, &MainView);
+	MainView.HSplitTop(22.0f, &Row, &MainView);
+	Row.VSplitRight(140.0f, &Label, &Button);
+	char aHammerRangeLabel[64];
+	str_format(aHammerRangeLabel, sizeof(aHammerRangeLabel), "Радиус автоогня: %d", g_Config.m_ClForstHammerAutoFireRange);
+	Ui()->DoLabel(&Label, aHammerRangeLabel, 13.0f, TEXTALIGN_ML);
+	CUIRect HammerRangeDown, HammerRangeUp;
+	Button.VSplitLeft(48.0f, &HammerRangeDown, &HammerRangeUp);
+	HammerRangeUp.VSplitLeft(4.0f, nullptr, &HammerRangeUp);
+	if(DoButton_Menu(&s_HammerRangeDownButton, "-", g_Config.m_ClForstHammerAutoFireRange <= 20, &HammerRangeDown))
+		g_Config.m_ClForstHammerAutoFireRange = std::max(20, g_Config.m_ClForstHammerAutoFireRange - 20);
+	if(DoButton_Menu(&s_HammerRangeUpButton, "+", g_Config.m_ClForstHammerAutoFireRange >= 400, &HammerRangeUp))
+		g_Config.m_ClForstHammerAutoFireRange = std::min(400, g_Config.m_ClForstHammerAutoFireRange + 20);
 
 	MainView.HSplitTop(4.0f, nullptr, &MainView);
 	MainView.HSplitTop(22.0f, &Row, &MainView);
