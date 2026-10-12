@@ -292,6 +292,28 @@ int CControls::SnapInput(int *pData)
 	}
 	else
 	{
+		// FORSTClient: auto-fire only while actively playing with the hammer equipped.
+		const bool AutoFireHammer = g_Config.m_ClForstHammerAutoFire &&
+			GameClient()->m_Snap.m_pLocalCharacter &&
+			GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_HAMMER &&
+			!GameClient()->m_Snap.m_SpecInfo.m_Active;
+		if(AutoFireHammer)
+		{
+			// Keep the fire input pressed; the server's hammer reload controls attack timing.
+			if((m_aInputData[g_Config.m_ClDummy].m_Fire & 1) == 0)
+			{
+				m_aInputData[g_Config.m_ClDummy].m_Fire = (m_aInputData[g_Config.m_ClDummy].m_Fire + 1) & INPUT_STATE_MASK;
+				m_ForstHammerAutoFireHeld = true;
+			}
+		}
+		else if(m_ForstHammerAutoFireHeld)
+		{
+			// Release only the fire press started by Auto Fire when leaving the hammer or disabling it.
+			if((m_aInputData[g_Config.m_ClDummy].m_Fire & 1) != 0)
+				m_aInputData[g_Config.m_ClDummy].m_Fire = (m_aInputData[g_Config.m_ClDummy].m_Fire + 1) & INPUT_STATE_MASK;
+			m_ForstHammerAutoFireHeld = false;
+		}
+
 		// TClient
 		vec2 Pos;
 		if(g_Config.m_ClSubTickAiming && m_aMousePosOnAction[g_Config.m_ClDummy] != vec2(0.0f, 0.0f))
