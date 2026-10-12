@@ -318,9 +318,10 @@ int CControls::SnapInput(int *pData)
 			const int LocalId = GameClient()->m_Snap.m_LocalClientId;
 			const int LocalTeam = GameClient()->m_aClients[LocalId].m_Team;
 			const vec2 LocalPos = GameClient()->m_LocalCharacterPos;
-			float BestDistance = 800.0f;
+			float BestScore = g_Config.m_ClForstAutoUnfreezeMode == 0 ? (float)g_Config.m_ClForstAutoUnfreezeRange : -2.0f;
 			vec2 BestDirection(0.0f, 0.0f);
 			bool FoundTarget = false;
+			const vec2 AimDirection = normalize(Pos);
 			for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
 			{
 				const auto &Character = GameClient()->m_Snap.m_aCharacters[ClientId];
@@ -334,11 +335,15 @@ int CControls::SnapInput(int *pData)
 				const vec2 Target((float)Character.m_Cur.m_X, (float)Character.m_Cur.m_Y);
 				const vec2 Direction = Target - LocalPos;
 				const float Distance = length(Direction);
-				if(Distance < 1.0f || Distance >= BestDistance)
+				if(Distance < 1.0f || Distance > g_Config.m_ClForstAutoUnfreezeRange)
 					continue;
 				if(Collision()->IntersectLine(LocalPos, Target, nullptr, nullptr))
 					continue;
-				BestDistance = Distance;
+				const float Score = g_Config.m_ClForstAutoUnfreezeMode == 0 ? Distance : dot(normalize(Direction), AimDirection);
+				if((g_Config.m_ClForstAutoUnfreezeMode == 0 && Score >= BestScore) ||
+					(g_Config.m_ClForstAutoUnfreezeMode == 1 && Score <= BestScore))
+					continue;
+				BestScore = Score;
 				BestDirection = Direction;
 				FoundTarget = true;
 			}
