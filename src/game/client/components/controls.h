@@ -44,6 +44,7 @@ public:
 	CNetObj_PlayerInput m_aFastInput[NUM_DUMMIES];
 	bool m_FastInputHookAction = false;
 	bool m_FastInputFireAction = false;
+	bool m_ForstHammerAutoFireHeld = false;
 
 	CControls();
 	int Sizeof() const override { return sizeof(*this); }
