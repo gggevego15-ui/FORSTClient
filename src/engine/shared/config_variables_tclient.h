@@ -295,6 +295,9 @@ MACRO_CONFIG_INT(TcUiShowBestClient, tc_ui_show_bestclient, 1, 0, 1, CFGFLAG_CLI
 MACRO_CONFIG_INT(TcUiOnlyModified, tc_ui_only_modified, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show only modified settings in Configs tab")
 MACRO_CONFIG_INT(TcUiCompactList, tc_ui_compact_list, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use compact row layout in Configs tab")
 
+// FORST tee accessory preview: 0 = none, 1 = bow tie, 2 = necktie, 3 = scarf, 4 = crown.
+MACRO_CONFIG_INT(ClForstTeeAccessory, cl_forst_tee_accessory, 0, 0, 4, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Selected FORST tee accessory in the appearance preview")
+
 // Dummy Info
 MACRO_CONFIG_INT(TcShowhudDummyPosition, tc_showhud_dummy_position, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show ingame HUD (Dummy Position)")
 MACRO_CONFIG_INT(TcShowhudDummySpeed, tc_showhud_dummy_speed, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show ingame HUD (Dummy Speed)")
