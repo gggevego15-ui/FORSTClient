@@ -337,14 +337,17 @@ int CControls::SnapInput(int *pData)
 				int Bounces = 0;
 				bool HitSelf = false;
 				bool ZeroDistanceBounceLastTime = false;
+				int Teleports = 0;
 				float Travelled = 0.0f;
 
-				for(int Segment = 0; Segment <= MaxBounces && Energy > 0.0f; ++Segment)
+				// Teleports add a segment without consuming a laser bounce.
+				for(int Segment = 0; Segment <= MaxBounces + 4 && Energy > 0.0f; ++Segment)
 				{
 					const vec2 SegmentStart = RayPos;
 					vec2 CollisionPos;
 					vec2 To = RayPos + Direction * Energy;
-					const int CollisionType = Collision()->IntersectLineTeleWeapon(RayPos, To, &CollisionPos, &To);
+					int TeleNr = 0;
+					const int CollisionType = Collision()->IntersectLineTeleWeapon(RayPos, To, &CollisionPos, &To, &TeleNr);
 					const float SegmentLength = distance(SegmentStart, To);
 
 					if(Bounces > 0 && SegmentLength > 0.0f)
@@ -362,6 +365,25 @@ int CControls::SnapInput(int *pData)
 
 					if(!CollisionType)
 						break;
+
+					// Tele-weapon tiles return their teleporter number through IntersectLineTeleWeapon.
+					// Sweep candidate exits across launch angles because the server's selected exit may vary.
+					if(CollisionType == TILE_TELEINWEAPON && TeleNr > 0)
+					{
+						const auto &TeleOuts = Collision()->TeleOuts(TeleNr - 1);
+						if(TeleOuts.empty() || Teleports >= 4)
+							break;
+
+						const vec2 TeleOut = TeleOuts[AngleStep % TeleOuts.size()];
+						if(TeleOut.x < 0.0f || TeleOut.y < 0.0f)
+							break;
+
+						Energy -= SegmentLength;
+						Travelled += SegmentLength;
+						RayPos = TeleOut;
+						++Teleports;
+						continue;
+					}
 
 					// Match CLaser::DoBounce: resolve the collision point, temporarily solidify tele-weapon hits,
 					// then use MovePoint to get the engine's actual reflected direction.
