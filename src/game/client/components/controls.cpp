@@ -310,47 +310,77 @@ int CControls::SnapInput(int *pData)
 				Pos *= 1000.0f / (float)MaxDistance;
 		}
 
-		// FORSTClient Auto Unfreeze: aim at the nearest visible frozen teammate while laser is selected.
+		// FORSTClient Auto Unfreeze: search for a laser bounce that returns to the local tee.
 		if(g_Config.m_ClForstAutoUnfreeze && GameClient()->m_Snap.m_pLocalCharacter &&
 			GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_LASER &&
 			!GameClient()->m_Snap.m_SpecInfo.m_Active && GameClient()->m_Snap.m_LocalClientId >= 0)
 		{
-			const int LocalId = GameClient()->m_Snap.m_LocalClientId;
-			const int LocalTeam = GameClient()->m_aClients[LocalId].m_Team;
 			const vec2 LocalPos = GameClient()->m_LocalCharacterPos;
-			float BestScore = g_Config.m_ClForstAutoUnfreezeMode == 0 ? (float)g_Config.m_ClForstAutoUnfreezeRange : -2.0f;
+			const float SearchEnergy = (float)g_Config.m_ClForstAutoUnfreezeRange;
+			float BestScore = -1.0f;
 			vec2 BestDirection(0.0f, 0.0f);
-			bool FoundTarget = false;
-			const vec2 AimDirection = normalize(Pos);
-			for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
-			{
-				const auto &Character = GameClient()->m_Snap.m_aCharacters[ClientId];
-				const auto &ClientData = GameClient()->m_aClients[ClientId];
-				if(ClientId == LocalId || !Character.m_Active || ClientData.m_Team != LocalTeam)
-					continue;
-				const bool Frozen = ClientData.m_DeepFrozen || ClientData.m_LiveFrozen ||
-					ClientData.m_FreezeEnd > Client()->GameTick();
-				if(!Frozen)
-					continue;
-				const vec2 Target((float)Character.m_Cur.m_X, (float)Character.m_Cur.m_Y);
-				const vec2 Direction = Target - LocalPos;
-				const float Distance = length(Direction);
-				if(Distance < 1.0f || Distance > g_Config.m_ClForstAutoUnfreezeRange)
-					continue;
-				if(Collision()->IntersectLine(LocalPos, Target, nullptr, nullptr))
-					continue;
-				const float Score = g_Config.m_ClForstAutoUnfreezeMode == 0 ? Distance : dot(normalize(Direction), AimDirection);
-				if((g_Config.m_ClForstAutoUnfreezeMode == 0 && Score >= BestScore) ||
-					(g_Config.m_ClForstAutoUnfreezeMode == 1 && Score <= BestScore))
-					continue;
-				BestScore = Score;
-				BestDirection = Direction;
-				FoundTarget = true;
-			}
-			if(FoundTarget)
-				Pos = BestDirection;
-		}
+			bool FoundSelfBounce = false;
 
+			// Sweep directions around the tee. The first segment cannot hit the owner in DDNet laser physics;
+			// only accept a path that reaches the owner's hit radius after at least one wall bounce.
+			for(int AngleStep = 0; AngleStep < 720; ++AngleStep)
+			{
+				const float Angle = (2.0f * pi * AngleStep) / 720.0f;
+				vec2 Direction(std::cos(Angle), std::sin(Angle));
+				vec2 RayPos = LocalPos;
+				float Energy = SearchEnergy;
+				int Bounces = 0;
+				bool HitSelf = false;
+
+				for(int Segment = 0; Segment < 5 && Energy > 1.0f; ++Segment)
+				{
+					vec2 CollisionPos;
+					vec2 To = RayPos + Direction * Energy;
+					const int CollisionType = Collision()->IntersectLineTeleWeapon(RayPos, To, &CollisionPos, &To);
+					const vec2 SegmentVec = To - RayPos;
+					const float SegmentLength = length(SegmentVec);
+					if(Bounces > 0 && SegmentLength > 0.0f)
+					{
+						const vec2 SegmentDir = SegmentVec / SegmentLength;
+						const float Along = std::clamp(dot(LocalPos - RayPos, SegmentDir), 0.0f, SegmentLength);
+						const vec2 Closest = RayPos + SegmentDir * Along;
+						if(distance(Closest, LocalPos) <= 28.0f)
+						{
+							HitSelf = true;
+							break;
+						}
+					}
+
+					if(!CollisionType)
+						break;
+
+					RayPos = To;
+					vec2 TempPos = RayPos;
+					vec2 TempDir = Direction * 4.0f;
+					Collision()->MovePoint(&TempPos, &TempDir, 1.0f, nullptr);
+					RayPos = TempPos;
+					Direction = normalize(TempDir);
+					Energy -= SegmentLength + 1.0f;
+					++Bounces;
+					if(Bounces > 4)
+						break;
+				}
+
+				if(HitSelf)
+				{
+					// Prefer shorter routes with fewer bounces.
+					const float Score = SearchEnergy - Energy + Bounces * 20.0f;
+					if(!FoundSelfBounce || Score < BestScore)
+					{
+						BestScore = Score;
+						BestDirection = vec2(std::cos(Angle), std::sin(Angle));
+						FoundSelfBounce = true;
+					}
+				}
+			}
+			if(FoundSelfBounce)
+				Pos = BestDirection * 1000.0f;
+		}
 		m_aInputData[g_Config.m_ClDummy].m_TargetX = (int)Pos.x;
 		m_aInputData[g_Config.m_ClDummy].m_TargetY = (int)Pos.y;
 
