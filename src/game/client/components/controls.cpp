@@ -310,43 +310,50 @@ int CControls::SnapInput(int *pData)
 				Pos *= 1000.0f / (float)MaxDistance;
 		}
 
-		// FORSTClient Auto Unfreeze: search for a laser bounce that returns to the local tee.
+		// FORSTClient Auto Unfreeze: simulate laser ricochets using the same collision and energy rules as CLaser.
 		if(g_Config.m_ClForstAutoUnfreeze && GameClient()->m_Snap.m_pLocalCharacter &&
 			GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_LASER &&
 			!GameClient()->m_Snap.m_SpecInfo.m_Active && GameClient()->m_Snap.m_LocalClientId >= 0)
 		{
 			const vec2 LocalPos = GameClient()->m_LocalCharacterPos;
-			const float SearchEnergy = (float)g_Config.m_ClForstAutoUnfreezeRange;
-			float BestScore = -1.0f;
+			const auto *pTuning = GameClient()->GetTuning(GameClient()->m_aLocalTuneZone[g_Config.m_ClDummy]);
+			const float SearchEnergy = std::min((float)g_Config.m_ClForstAutoUnfreezeRange, pTuning->m_LaserReach);
+			const int MaxBounces = pTuning->m_LaserBounceNum;
+			const float BounceCost = pTuning->m_LaserBounceCost;
+			float BestScore = std::numeric_limits<float>::max();
 			vec2 BestDirection(0.0f, 0.0f);
 			bool FoundSelfBounce = false;
 
-			// Sweep directions around the tee. The first segment cannot hit the owner in DDNet laser physics;
-			// only accept a path that reaches the owner's hit radius after at least one wall bounce.
-			for(int AngleStep = 0; AngleStep < 720; ++AngleStep)
+			// Fine angular sweep; refine the best candidate in a second pass below.
+			for(int AngleStep = 0; AngleStep < 1440; ++AngleStep)
 			{
-				const float Angle = (2.0f * pi * AngleStep) / 720.0f;
-				vec2 Direction(std::cos(Angle), std::sin(Angle));
+				const float Angle = (2.0f * pi * AngleStep) / 1440.0f;
+				const vec2 InitialDirection(std::cos(Angle), std::sin(Angle));
+				vec2 Direction = InitialDirection;
 				vec2 RayPos = LocalPos;
 				float Energy = SearchEnergy;
 				int Bounces = 0;
 				bool HitSelf = false;
+				bool ZeroDistanceBounceLastTime = false;
+				float Travelled = 0.0f;
 
-				for(int Segment = 0; Segment < 5 && Energy > 1.0f; ++Segment)
+				for(int Segment = 0; Segment <= MaxBounces && Energy > 0.0f; ++Segment)
 				{
+					const vec2 SegmentStart = RayPos;
 					vec2 CollisionPos;
 					vec2 To = RayPos + Direction * Energy;
 					const int CollisionType = Collision()->IntersectLineTeleWeapon(RayPos, To, &CollisionPos, &To);
-					const vec2 SegmentVec = To - RayPos;
-					const float SegmentLength = length(SegmentVec);
+					const float SegmentLength = distance(SegmentStart, To);
+
 					if(Bounces > 0 && SegmentLength > 0.0f)
 					{
-						const vec2 SegmentDir = SegmentVec / SegmentLength;
-						const float Along = std::clamp(dot(LocalPos - RayPos, SegmentDir), 0.0f, SegmentLength);
-						const vec2 Closest = RayPos + SegmentDir * Along;
+						const vec2 SegmentDirection = (To - SegmentStart) / SegmentLength;
+						const float Along = std::clamp(dot(LocalPos - SegmentStart, SegmentDirection), 0.0f, SegmentLength);
+						const vec2 Closest = SegmentStart + SegmentDirection * Along;
 						if(distance(Closest, LocalPos) <= 28.0f)
 						{
 							HitSelf = true;
+							Travelled += Along;
 							break;
 						}
 					}
@@ -354,29 +361,51 @@ int CControls::SnapInput(int *pData)
 					if(!CollisionType)
 						break;
 
+					// Match CLaser::DoBounce: resolve the collision point, temporarily solidify tele-weapon hits,
+					// then use MovePoint to get the engine's actual reflected direction.
 					RayPos = To;
-					vec2 TempPos = RayPos;
-					vec2 TempDir = Direction * 4.0f;
-					Collision()->MovePoint(&TempPos, &TempDir, 1.0f, nullptr);
-					RayPos = TempPos;
-					Direction = normalize(TempDir);
-					Energy -= SegmentLength + 1.0f;
-					++Bounces;
-					if(Bounces > 4)
-						break;
-				}
-
-				if(HitSelf)
+					vec2 ReflectedPos = RayPos;
+					vec2 ReflectedDir = Direction * 4.0f;
+					int OriginalTile = 0;
+					if(CollisionType == -1)
 				{
-					// Prefer shorter routes with fewer bounces.
-					const float Score = SearchEnergy - Energy + Bounces * 20.0f;
-					if(!FoundSelfBounce || Score < BestScore)
-					{
-						BestScore = Score;
-						BestDirection = vec2(std::cos(Angle), std::sin(Angle));
-						FoundSelfBounce = true;
-					}
+					OriginalTile = Collision()->GetTile(round_to_int(CollisionPos.x), round_to_int(CollisionPos.y));
+					Collision()->SetCollisionAt(round_to_int(CollisionPos.x), round_to_int(CollisionPos.y), TILE_SOLID);
 				}
+				Collision()->MovePoint(&ReflectedPos, &ReflectedDir, 1.0f, nullptr);
+				if(CollisionType == -1)
+					Collision()->SetCollisionAt(round_to_int(CollisionPos.x), round_to_int(CollisionPos.y), OriginalTile);
+
+				RayPos = ReflectedPos;
+				Direction = normalize(ReflectedDir);
+				const float BounceDistance = distance(SegmentStart, RayPos);
+				if(BounceDistance == 0.0f && ZeroDistanceBounceLastTime)
+					break;
+				Energy -= BounceDistance + BounceCost;
+				ZeroDistanceBounceLastTime = BounceDistance == 0.0f;
+				Travelled += BounceDistance;
+				++Bounces;
+				if(Bounces > MaxBounces)
+					break;
+				if(Energy <= 0.0f)
+					break;
+				if(Bounces >= 1 && distance(RayPos, LocalPos) <= 28.0f)
+				{
+					HitSelf = true;
+					break;
+				}
+			}
+
+			if(HitSelf)
+			{
+				const float Score = Travelled + Bounces * 20.0f;
+				if(Score < BestScore)
+				{
+					BestScore = Score;
+					BestDirection = InitialDirection;
+					FoundSelfBounce = true;
+				}
+			}
 			}
 			if(FoundSelfBounce)
 				Pos = BestDirection * 1000.0f;
