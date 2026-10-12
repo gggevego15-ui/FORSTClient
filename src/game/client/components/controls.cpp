@@ -297,7 +297,7 @@ int CControls::SnapInput(int *pData)
 		if(GameClient()->m_Snap.m_pLocalCharacter && GameClient()->m_Snap.m_LocalClientId >= 0)
 		{
 			const vec2 LocalPos(GameClient()->m_Snap.m_pLocalCharacter->m_X, GameClient()->m_Snap.m_pLocalCharacter->m_Y);
-			constexpr float HammerAutoFireRange = 80.0f;
+			const float HammerAutoFireRange = (float)g_Config.m_ClForstHammerAutoFireRange;
 			for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
 			{
 				if(ClientId == GameClient()->m_Snap.m_LocalClientId ||
