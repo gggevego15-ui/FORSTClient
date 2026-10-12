@@ -21,6 +21,7 @@
 #include <game/collision.h>
 
 #include <algorithm>
+#include <limits>
 
 CControls::CControls()
 {
@@ -318,7 +319,7 @@ int CControls::SnapInput(int *pData)
 			const vec2 LocalPos = GameClient()->m_LocalCharacterPos;
 			const auto *pTuning = GameClient()->GetTuning(GameClient()->m_aLocalTuneZone[g_Config.m_ClDummy]);
 			const float SearchEnergy = std::min((float)g_Config.m_ClForstAutoUnfreezeRange, pTuning->m_LaserReach);
-			const int MaxBounces = pTuning->m_LaserBounceNum;
+			const int MaxBounces = std::min(pTuning->m_LaserBounceNum, 12); // Bound per-frame simulation cost
 			const float BounceCost = pTuning->m_LaserBounceCost;
 			float BestScore = std::numeric_limits<float>::max();
 			vec2 BestDirection(0.0f, 0.0f);
