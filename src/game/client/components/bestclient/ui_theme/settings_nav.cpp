@@ -57,6 +57,7 @@ static const int s_aBestclientLeaves[] = {
 	SETTINGS_NAV_LEAF_BC_GAMEPLAY,
 	SETTINGS_NAV_LEAF_BC_OTHERS,
 	SETTINGS_NAV_LEAF_BC_INFO,
+	SETTINGS_NAV_LEAF_FORST,
 };
 
 static int LeafVisualRank(int Leaf)
@@ -162,6 +163,9 @@ SSettingsLeafTarget LeafTarget(int Leaf)
 		Target.m_SettingsPage = CMenus::SETTINGS_BESTCLIENT;
 		Target.m_BestClientTab = BC_TAB_INFO;
 		break;
+	case SETTINGS_NAV_LEAF_FORST:
+		Target.m_SettingsPage = CMenus::SETTINGS_FORST;
+		break;
 	default:
 		Target.m_SettingsPage = CMenus::SETTINGS_GENERAL;
 		break;
@@ -174,6 +178,8 @@ int GroupForLeaf(int Leaf)
 	if(Leaf >= SETTINGS_NAV_LEAF_TC_SETTINGS && Leaf <= SETTINGS_NAV_LEAF_TC_CONFIGS)
 		return SETTINGS_NAV_GROUP_TCLIENT;
 	if(Leaf >= SETTINGS_NAV_LEAF_BC_VISUALS && Leaf <= SETTINGS_NAV_LEAF_BC_INFO)
+		return SETTINGS_NAV_GROUP_BESTCLIENT;
+	if(Leaf == SETTINGS_NAV_LEAF_FORST)
 		return SETTINGS_NAV_GROUP_BESTCLIENT;
 	return SETTINGS_NAV_GROUP_DDNET;
 }
@@ -206,6 +212,7 @@ int LeafFromState(int SettingsPage, int TClientTab, int BestClientTab)
 	case CMenus::SETTINGS_DDNET: return SETTINGS_NAV_LEAF_DDNET;
 	case CMenus::SETTINGS_ASSETS: return SETTINGS_NAV_LEAF_ASSETS;
 	case CMenus::SETTINGS_CREDITS: return SETTINGS_NAV_LEAF_CREDITS;
+	case CMenus::SETTINGS_FORST: return SETTINGS_NAV_LEAF_FORST;
 	case CMenus::SETTINGS_PROFILES: return SETTINGS_NAV_LEAF_TC_PROFILE;
 	case CMenus::SETTINGS_CONFIGS: return SETTINGS_NAV_LEAF_TC_CONFIGS;
 	case CMenus::SETTINGS_TCLIENT:
@@ -395,6 +402,7 @@ void CMenus::RenderSettingsNavNewStyle(CUIRect &TabBar)
 		case SETTINGS_NAV_LEAF_BC_GAMEPLAY: return BcLocalize("Gameplay");
 		case SETTINGS_NAV_LEAF_BC_OTHERS: return BcLocalize("Others");
 		case SETTINGS_NAV_LEAF_BC_INFO: return BcLocalize("Info");
+		case SETTINGS_NAV_LEAF_FORST: return "FORST";
 		default: return "";
 		}
 	};
@@ -578,6 +586,11 @@ void CMenus::RenderSettingsPage(CUIRect MainView)
 	{
 		GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_SETTINGS_CREDITS);
 		RenderSettingsCredits(MainView);
+	}
+	else if(g_Config.m_UiSettingsPage == SETTINGS_FORST)
+	{
+		GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_SETTINGS_GENERAL);
+		RenderSettingsForst(MainView);
 	}
 	else
 	{
