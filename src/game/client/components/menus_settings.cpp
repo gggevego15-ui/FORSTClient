@@ -115,8 +115,10 @@ void CMenus::RenderSettingsForst(CUIRect MainView)
 
 	MainView.HSplitTop(4.0f, nullptr, &MainView);
 	MainView.HSplitTop(22.0f, &Row, &MainView);
-	Row.VSplitRight(140.0f, &Button, &Label);
-	Ui()->DoLabel(&Label, "Радиус: " + std::to_string(g_Config.m_ClForstAutoUnfreezeRange), 13.0f, TEXTALIGN_ML);
+	Row.VSplitRight(140.0f, &Label, &Button);
+	char aRangeLabel[64];
+	str_format(aRangeLabel, sizeof(aRangeLabel), "Радиус: %d", g_Config.m_ClForstAutoUnfreezeRange);
+	Ui()->DoLabel(&Label, aRangeLabel, 13.0f, TEXTALIGN_ML);
 	CUIRect RangeDown, RangeUp;
 	Button.VSplitLeft(48.0f, &RangeDown, &RangeUp);
 	RangeUp.VSplitLeft(4.0f, nullptr, &RangeUp);
