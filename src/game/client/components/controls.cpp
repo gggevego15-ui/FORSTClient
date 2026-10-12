@@ -19,6 +19,7 @@
 #include <game/client/components/scoreboard.h>
 #include <game/client/gameclient.h>
 #include <game/collision.h>
+#include <game/mapitems.h>
 
 #include <algorithm>
 #include <limits>
@@ -325,7 +326,7 @@ int CControls::SnapInput(int *pData)
 			vec2 BestDirection(0.0f, 0.0f);
 			bool FoundSelfBounce = false;
 
-			// Fine angular sweep; refine the best candidate in a second pass below.
+			// Fine angular sweep at 0.25-degree intervals.
 			for(int AngleStep = 0; AngleStep < 1440; ++AngleStep)
 			{
 				const float Angle = (2.0f * pi * AngleStep) / 1440.0f;
