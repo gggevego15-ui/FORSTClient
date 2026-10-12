@@ -87,15 +87,45 @@ void CMenus::RenderSettingsForst(CUIRect MainView)
 	static bool s_TestButtonChecked = false;
 	static CButtonContainer s_AnimationsButton;
 	static CButtonContainer s_TestButton;
+	static CButtonContainer s_AutoUnfreezeButton;
+	static CButtonContainer s_AutoUnfreezeModeButton;
+	static CButtonContainer s_RangeDownButton;
+	static CButtonContainer s_RangeUpButton;
 	CUIRect Title, Description, Row, Button, Label;
 
 	MainView.HSplitTop(28.0f, &Title, &MainView);
 	Ui()->DoLabel(&Title, "FORST Client", 20.0f, TEXTALIGN_ML);
 	MainView.HSplitTop(4.0f, nullptr, &MainView);
 	MainView.HSplitTop(24.0f, &Description, &MainView);
-	Ui()->DoLabel(&Description, "Компактные кнопки в стиле оригинального клиента.", 13.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Description, "Настройки функций и внешнего вида FORST Client.", 13.0f, TEXTALIGN_ML);
 	MainView.HSplitTop(12.0f, nullptr, &MainView);
 
+	MainView.HSplitTop(22.0f, &Row, &MainView);
+	Row.VSplitRight(140.0f, &Label, &Button);
+	Ui()->DoLabel(&Label, "Auto Unfreeze", 13.0f, TEXTALIGN_ML);
+	if(DoButton_Menu(&s_AutoUnfreezeButton, g_Config.m_ClForstAutoUnfreeze ? "Включён" : "Выключен", g_Config.m_ClForstAutoUnfreeze, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 2.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f)))
+		g_Config.m_ClForstAutoUnfreeze = !g_Config.m_ClForstAutoUnfreeze;
+
+	MainView.HSplitTop(4.0f, nullptr, &MainView);
+	MainView.HSplitTop(22.0f, &Row, &MainView);
+	Row.VSplitRight(140.0f, &Label, &Button);
+	Ui()->DoLabel(&Label, "Приоритет цели", 13.0f, TEXTALIGN_ML);
+	if(DoButton_Menu(&s_AutoUnfreezeModeButton, g_Config.m_ClForstAutoUnfreezeMode == 0 ? "Ближайшая" : "По прицелу", g_Config.m_ClForstAutoUnfreezeMode, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 2.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f)))
+		g_Config.m_ClForstAutoUnfreezeMode = !g_Config.m_ClForstAutoUnfreezeMode;
+
+	MainView.HSplitTop(4.0f, nullptr, &MainView);
+	MainView.HSplitTop(22.0f, &Row, &MainView);
+	Row.VSplitRight(140.0f, &Button, &Label);
+	Ui()->DoLabel(&Label, "Радиус: " + std::to_string(g_Config.m_ClForstAutoUnfreezeRange), 13.0f, TEXTALIGN_ML);
+	CUIRect RangeDown, RangeUp;
+	Button.VSplitLeft(48.0f, &RangeDown, &RangeUp);
+	RangeUp.VSplitLeft(4.0f, nullptr, &RangeUp);
+	if(DoButton_Menu(&s_RangeDownButton, "-", g_Config.m_ClForstAutoUnfreezeRange <= 100, &RangeDown))
+		g_Config.m_ClForstAutoUnfreezeRange = std::max(100, g_Config.m_ClForstAutoUnfreezeRange - 100);
+	if(DoButton_Menu(&s_RangeUpButton, "+", g_Config.m_ClForstAutoUnfreezeRange >= 1000, &RangeUp))
+		g_Config.m_ClForstAutoUnfreezeRange = std::min(1000, g_Config.m_ClForstAutoUnfreezeRange + 100);
+
+	MainView.HSplitTop(12.0f, nullptr, &MainView);
 	MainView.HSplitTop(22.0f, &Row, &MainView);
 	Row.VSplitRight(112.0f, &Label, &Button);
 	Ui()->DoLabel(&Label, "Анимации кнопок", 13.0f, TEXTALIGN_ML);
