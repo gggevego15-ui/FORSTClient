@@ -3,6 +3,7 @@
 #include "menus.h"
 
 #include <base/math.h> // bestclient
+#include <cmath>
 #include <base/str.h>
 
 #include <engine/font_icons.h>
