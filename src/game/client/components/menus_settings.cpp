@@ -84,16 +84,16 @@ CUi::EPopupMenuFunctionResult CMenus::PopupSettingsCountrySelection(void *pConte
 void CMenus::RenderSettingsForst(CUIRect MainView)
 {
 	static bool s_ButtonAnimations = true;
-	static bool s_CompactButtons = true;
+	static bool s_TestButtonChecked = false;
 	static CButtonContainer s_AnimationsButton;
-	static CButtonContainer s_CompactButton;
+	static CButtonContainer s_TestButton;
 	CUIRect Title, Description, Row, Button, Label;
 
 	MainView.HSplitTop(28.0f, &Title, &MainView);
 	Ui()->DoLabel(&Title, "FORST Client", 20.0f, TEXTALIGN_ML);
 	MainView.HSplitTop(4.0f, nullptr, &MainView);
 	MainView.HSplitTop(24.0f, &Description, &MainView);
-	Ui()->DoLabel(&Description, "Настройки интерфейса FORST.", 13.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Description, "Компактные кнопки в стиле оригинального клиента.", 13.0f, TEXTALIGN_ML);
 	MainView.HSplitTop(12.0f, nullptr, &MainView);
 
 	MainView.HSplitTop(22.0f, &Row, &MainView);
@@ -105,9 +105,14 @@ void CMenus::RenderSettingsForst(CUIRect MainView)
 	MainView.HSplitTop(6.0f, nullptr, &MainView);
 	MainView.HSplitTop(22.0f, &Row, &MainView);
 	Row.VSplitRight(112.0f, &Label, &Button);
-	Ui()->DoLabel(&Label, "Компактные кнопки", 13.0f, TEXTALIGN_ML);
-	if(DoButton_Menu(&s_CompactButton, s_CompactButtons ? "Включены" : "Выключены", s_CompactButtons, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 2.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f)))
-		s_CompactButtons = !s_CompactButtons;
+	Ui()->DoLabel(&Label, "Пример кнопки", 13.0f, TEXTALIGN_ML);
+	if(s_ButtonAnimations)
+	{
+		if(DoButton_MenuTab(&s_TestButton, s_TestButtonChecked ? "Активна" : "Нажми меня", s_TestButtonChecked, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, 2.0f))
+			s_TestButtonChecked = !s_TestButtonChecked;
+	}
+	else if(DoButton_Menu(&s_TestButton, s_TestButtonChecked ? "Активна" : "Нажми меня", s_TestButtonChecked, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 2.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f)))
+		s_TestButtonChecked = !s_TestButtonChecked;
 }
 
 void CMenus::RenderSettings(CUIRect MainView)
