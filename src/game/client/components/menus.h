@@ -832,6 +832,7 @@ public:
 		SETTINGS_PROFILES, // TClient
 		SETTINGS_CONFIGS, // TClient
 		SETTINGS_CREDITS,
+		SETTINGS_FORST,
 		SETTINGS_LENGTH,
 	};
 
@@ -1151,6 +1152,7 @@ public:
 	void SetTClientSettingsTab(int Tab);
 	int GetTClientSettingsTab() const;
 	void RenderSettingsNavNewStyle(CUIRect &TabBar);
+	void RenderSettingsForst(CUIRect MainView);
 	void RenderSettingsPage(CUIRect MainView);
 	void RenderSettingsPageAt(CUIRect MainView, int SettingsPage, int TClientTab, int BestClientTab);
 	void RenderSettingsContentNewStyle(CUIRect MainView);
