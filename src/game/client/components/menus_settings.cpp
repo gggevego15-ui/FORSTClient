@@ -88,7 +88,6 @@ void CMenus::RenderSettingsForst(CUIRect MainView)
 	static CButtonContainer s_AnimationsButton;
 	static CButtonContainer s_TestButton;
 	static CButtonContainer s_AutoUnfreezeButton;
-	static CButtonContainer s_AutoUnfreezeModeButton;
 	static CButtonContainer s_RangeDownButton;
 	static CButtonContainer s_RangeUpButton;
 	CUIRect Title, Description, Row, Button, Label;
@@ -109,9 +108,8 @@ void CMenus::RenderSettingsForst(CUIRect MainView)
 	MainView.HSplitTop(4.0f, nullptr, &MainView);
 	MainView.HSplitTop(22.0f, &Row, &MainView);
 	Row.VSplitRight(140.0f, &Label, &Button);
-	Ui()->DoLabel(&Label, "Приоритет цели", 13.0f, TEXTALIGN_ML);
-	if(DoButton_Menu(&s_AutoUnfreezeModeButton, g_Config.m_ClForstAutoUnfreezeMode == 0 ? "Ближайшая" : "По прицелу", g_Config.m_ClForstAutoUnfreezeMode, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 2.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f)))
-		g_Config.m_ClForstAutoUnfreezeMode = !g_Config.m_ClForstAutoUnfreezeMode;
+	Ui()->DoLabel(&Label, "Режим наведения", 13.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Button, "Рикошет в себя", 13.0f, TEXTALIGN_ML);
 
 	MainView.HSplitTop(4.0f, nullptr, &MainView);
 	MainView.HSplitTop(22.0f, &Row, &MainView);
