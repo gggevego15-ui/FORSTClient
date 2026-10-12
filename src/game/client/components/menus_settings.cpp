@@ -108,6 +108,14 @@ void CMenus::RenderSettingsForst(CUIRect MainView)
 	MainView.HSplitTop(4.0f, nullptr, &MainView);
 	MainView.HSplitTop(22.0f, &Row, &MainView);
 	Row.VSplitRight(140.0f, &Label, &Button);
+	static CButtonContainer s_HammerAutoFireButton;
+	Ui()->DoLabel(&Label, "Автоогонь молота", 13.0f, TEXTALIGN_ML);
+	if(DoButton_Menu(&s_HammerAutoFireButton, g_Config.m_ClForstHammerAutoFire ? "Включён" : "Выключен", g_Config.m_ClForstHammerAutoFire, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 2.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f)))
+		g_Config.m_ClForstHammerAutoFire = !g_Config.m_ClForstHammerAutoFire;
+
+	MainView.HSplitTop(4.0f, nullptr, &MainView);
+	MainView.HSplitTop(22.0f, &Row, &MainView);
+	Row.VSplitRight(140.0f, &Label, &Button);
 	Ui()->DoLabel(&Label, "Режим наведения", 13.0f, TEXTALIGN_ML);
 	Ui()->DoLabel(&Button, "Рикошет в себя", 13.0f, TEXTALIGN_ML);
 
