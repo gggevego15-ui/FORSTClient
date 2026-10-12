@@ -287,27 +287,81 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	OwnSkinInfo.ApplyColors(*pUseCustomColor, *pColorBody, *pColorFeet);
 	OwnSkinInfo.m_Size = 50.0f;
 
-	// Tee // bestclient
+	// Tee preview and FORST accessories.
 	{
 		vec2 OffsetToMid;
 		CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &OwnSkinInfo, OffsetToMid);
 		const vec2 TeeRenderPos = vec2(TeePreview.x + TeePreview.w / 2.0f, TeePreview.y + OwnSkinInfo.m_Size / 2.0f + OffsetToMid.y);
-		// tee looking towards cursor, and it is happy when you touch it
 		const vec2 DeltaPosition = Ui()->MousePos() - TeeRenderPos;
 		const float Distance = length(DeltaPosition);
 		const float InteractionDistance = 20.0f;
 		const vec2 TeeDirection = Distance < InteractionDistance ? normalize(vec2(DeltaPosition.x, std::max(DeltaPosition.y, 0.5f))) : normalize(DeltaPosition);
 		const int TeeEmote = *pEmote;
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, TeeEmote, TeeDirection, TeeRenderPos);
+
+		// Accessories are preview-only overlays: they don't modify the selected skin.
+		static int s_Accessory = 0; // 0 none, 1 bow tie, 2 necktie, 3 scarf, 4 crown
+		static CButtonContainer s_AccessoryButton;
 		static char s_InteractiveTeeButtonId;
-		if(Ui()->DoButtonLogic(&s_InteractiveTeeButtonId, 0, &TeePreview, BUTTONFLAG_LEFT))
+		CUIRect TeeInteraction = TeePreview;
+		TeeInteraction.h = std::min(TeeInteraction.h, 58.0f);
+		if(Ui()->DoButtonLogic(&s_InteractiveTeeButtonId, 0, &TeeInteraction, BUTTONFLAG_LEFT))
 		{
 			*pEmote = (*pEmote + 1) % NUM_EMOTES;
 			if((int)m_Dummy == g_Config.m_ClDummy)
 				GameClient()->m_Emoticon.EyeEmote(*pEmote);
 		}
-		GameClient()->m_Tooltips.DoToolTip(&s_InteractiveTeeButtonId, &TeePreview, Localize("Choose default eyes when joining a server"));
-	} // bestclient
+		GameClient()->m_Tooltips.DoToolTip(&s_InteractiveTeeButtonId, &TeeInteraction, Localize("Click the Tee to change its eyes"));
+
+		static float s_AccessoryAnim = 0.0f;
+		s_AccessoryAnim += Client()->RenderFrameTime() * 4.0f;
+		const float Pulse = 0.82f + 0.18f * (0.5f + 0.5f * std::sin(s_AccessoryAnim));
+		const float CenterX = TeeRenderPos.x;
+		const float ChestY = TeeRenderPos.y + 5.0f;
+		if(s_Accessory != 0)
+		{
+			CUIRect Accessory;
+			if(s_Accessory == 1) // bow tie
+			{
+				Accessory = {CenterX - 7.0f, ChestY - 1.5f, 5.0f, 5.0f};
+				Accessory.Draw(ColorRGBA(0.95f, 0.18f, 0.35f, Pulse), IGraphics::CORNER_ALL, 1.0f);
+				Accessory = {CenterX + 2.0f, ChestY - 1.5f, 5.0f, 5.0f};
+				Accessory.Draw(ColorRGBA(0.95f, 0.18f, 0.35f, Pulse), IGraphics::CORNER_ALL, 1.0f);
+				Accessory = {CenterX - 2.0f, ChestY, 4.0f, 3.0f};
+				Accessory.Draw(ColorRGBA(1.0f, 0.72f, 0.25f, Pulse), IGraphics::CORNER_ALL, 1.0f);
+			}
+			else if(s_Accessory == 2) // necktie
+			{
+				Accessory = {CenterX - 2.0f, ChestY - 2.0f, 4.0f, 11.0f};
+				Accessory.Draw(ColorRGBA(0.15f, 0.48f, 0.95f, Pulse), IGraphics::CORNER_ALL, 1.0f);
+				Accessory = {CenterX - 3.0f, ChestY - 2.0f, 6.0f, 3.0f};
+				Accessory.Draw(ColorRGBA(0.95f, 0.95f, 1.0f, Pulse), IGraphics::CORNER_ALL, 1.0f);
+			}
+			else if(s_Accessory == 3) // scarf
+			{
+				Accessory = {CenterX - 7.0f, ChestY - 3.0f, 14.0f, 4.0f};
+				Accessory.Draw(ColorRGBA(0.18f, 0.82f, 0.68f, Pulse), IGraphics::CORNER_ALL, 2.0f);
+				Accessory = {CenterX + 3.0f, ChestY, 3.0f, 7.0f};
+				Accessory.Draw(ColorRGBA(0.18f, 0.82f, 0.68f, Pulse), IGraphics::CORNER_ALL, 1.0f);
+			}
+			else if(s_Accessory == 4) // crown
+			{
+				Accessory = {CenterX - 7.0f, TeeRenderPos.y - 15.0f, 14.0f, 5.0f};
+				Accessory.Draw(ColorRGBA(1.0f, 0.72f, 0.12f, Pulse), IGraphics::CORNER_ALL, 1.0f);
+				for(int i = -1; i <= 1; i++)
+				{
+					Accessory = {CenterX + i * 4.0f - 1.5f, TeeRenderPos.y - 18.0f, 3.0f, 4.0f};
+					Accessory.Draw(ColorRGBA(1.0f, 0.84f, 0.25f, Pulse), IGraphics::CORNER_ALL, 1.0f);
+				}
+			}
+		}
+
+		CUIRect AccessoryButton = TeePreview;
+		AccessoryButton.HSplitBottom(19.0f, nullptr, &AccessoryButton);
+		const char *apAccessories[] = {"Украшение: нет", "Бантик", "Галстук", "Шарфик", "Корона"};
+		if(DoButton_Menu(&s_AccessoryButton, apAccessories[s_Accessory], s_Accessory != 0, &AccessoryButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 3.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f)))
+			s_Accessory = (s_Accessory + 1) % 5;
+	} // FORST accessories
 
 	// Skin loading status
 	const auto &&RenderSkinStatus = [&](CUIRect Parent, const CSkins::CSkinContainer *pSkinContainer, const void *pStatusTooltipId) {
