@@ -300,7 +300,9 @@ int CControls::SnapInput(int *pData)
 			constexpr float HammerAutoFireRange = 80.0f;
 			for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
 			{
-				if(ClientId == GameClient()->m_Snap.m_LocalClientId || !GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
+				if(ClientId == GameClient()->m_Snap.m_LocalClientId ||
+					!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active ||
+					!GameClient()->IsOtherTeam(ClientId))
 					continue;
 				const vec2 OtherPos = GameClient()->m_aClients[ClientId].m_RegularPredicted.m_Pos;
 				if(length(OtherPos - LocalPos) <= HammerAutoFireRange)
