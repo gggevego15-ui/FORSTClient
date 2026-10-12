@@ -309,6 +309,43 @@ int CControls::SnapInput(int *pData)
 			if(MaxDistance > 5 && MaxDistance < 1000) // Don't scale if angle bind or reduces precision
 				Pos *= 1000.0f / (float)MaxDistance;
 		}
+
+		// FORSTClient Auto Unfreeze: aim at the nearest visible frozen teammate while laser is selected.
+		if(g_Config.m_ClForstAutoUnfreeze && GameClient()->m_Snap.m_pLocalCharacter &&
+			GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_LASER &&
+			!GameClient()->m_Snap.m_SpecInfo.m_Active && GameClient()->m_Snap.m_LocalClientId >= 0)
+		{
+			const int LocalId = GameClient()->m_Snap.m_LocalClientId;
+			const int LocalTeam = GameClient()->m_aClients[LocalId].m_Team;
+			const vec2 LocalPos = GameClient()->m_LocalCharacterPos;
+			float BestDistance = 800.0f;
+			vec2 BestDirection(0.0f, 0.0f);
+			bool FoundTarget = false;
+			for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+			{
+				const auto &Character = GameClient()->m_Snap.m_aCharacters[ClientId];
+				const auto &ClientData = GameClient()->m_aClients[ClientId];
+				if(ClientId == LocalId || !Character.m_Active || ClientData.m_Team != LocalTeam)
+					continue;
+				const bool Frozen = ClientData.m_DeepFrozen || ClientData.m_LiveFrozen ||
+					ClientData.m_FreezeEnd > Client()->GameTick();
+				if(!Frozen)
+					continue;
+				const vec2 Target((float)Character.m_Cur.m_X, (float)Character.m_Cur.m_Y);
+				const vec2 Direction = Target - LocalPos;
+				const float Distance = length(Direction);
+				if(Distance < 1.0f || Distance >= BestDistance)
+					continue;
+				if(Collision()->IntersectLine(LocalPos, Target, nullptr, nullptr))
+					continue;
+				BestDistance = Distance;
+				BestDirection = Direction;
+				FoundTarget = true;
+			}
+			if(FoundTarget)
+				Pos = BestDirection;
+		}
+
 		m_aInputData[g_Config.m_ClDummy].m_TargetX = (int)Pos.x;
 		m_aInputData[g_Config.m_ClDummy].m_TargetY = (int)Pos.y;
 
