@@ -301,7 +301,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, TeeEmote, TeeDirection, TeeRenderPos);
 
 		// Accessories are preview-only overlays: they don't modify the selected skin.
-		static int s_Accessory = 0; // 0 none, 1 bow tie, 2 necktie, 3 scarf, 4 crown
+		int &s_Accessory = g_Config.m_ClForstTeeAccessory; // saved in client config
 		static CButtonContainer s_AccessoryButton;
 		static char s_InteractiveTeeButtonId;
 		CUIRect TeeInteraction = TeePreview;
