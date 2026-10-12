@@ -292,11 +292,29 @@ int CControls::SnapInput(int *pData)
 	}
 	else
 	{
-		// FORSTClient: auto-fire only while actively playing with the hammer equipped.
+		// FORSTClient: auto-fire only while actively playing with the hammer equipped and another tee is nearby.
+		bool HammerTargetNearby = false;
+		if(GameClient()->m_Snap.m_pLocalCharacter && GameClient()->m_Snap.m_LocalClientId >= 0)
+		{
+			const vec2 LocalPos(GameClient()->m_Snap.m_pLocalCharacter->m_X, GameClient()->m_Snap.m_pLocalCharacter->m_Y);
+			constexpr float HammerAutoFireRange = 80.0f;
+			for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+			{
+				if(ClientId == GameClient()->m_Snap.m_LocalClientId || !GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
+					continue;
+				const vec2 OtherPos = GameClient()->m_aClients[ClientId].m_RegularPredicted.m_Pos;
+				if(length(OtherPos - LocalPos) <= HammerAutoFireRange)
+				{
+					HammerTargetNearby = true;
+					break;
+				}
+			}
+		}
 		const bool AutoFireHammer = g_Config.m_ClForstHammerAutoFire &&
 			GameClient()->m_Snap.m_pLocalCharacter &&
 			GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_HAMMER &&
-			!GameClient()->m_Snap.m_SpecInfo.m_Active;
+			!GameClient()->m_Snap.m_SpecInfo.m_Active &&
+			HammerTargetNearby;
 		if(AutoFireHammer)
 		{
 			// Keep the fire input pressed; the server's hammer reload controls attack timing.
